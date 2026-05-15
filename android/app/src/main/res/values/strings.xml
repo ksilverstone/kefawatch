@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Kefawatch</string>
+    <string name="hint_username">Kullanıcı adı</string>
+    <string name="hint_password">Şifre</string>
+    <string name="login">Giriş</string>
+    <string name="register">Kayıt</string>
+    <string name="load_catalog">Kataloğu yükle</string>
+    <string name="status">Durum</string>
+</resources>
