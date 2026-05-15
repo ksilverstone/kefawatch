@@ -1,0 +1,32 @@
+spring:
+  application:
+    name: kefawatch-api
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:kefawatch}
+    username: ${DB_USER:kefa}
+    password: ${DB_PASSWORD:kefa}
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+
+server:
+  port: ${SERVER_PORT:8080}
+
+kefawatch:
+  jwt:
+    secret: ${JWT_SECRET:change-this-dev-secret-min-32-chars-long!!}
+    expiration-ms: ${JWT_EXPIRATION_MS:86400000}
+
+springdoc:
+  api-docs:
+    path: /api/v3/api-docs
+  swagger-ui:
+    path: /api/swagger-ui.html
+
+logging:
+  level:
+    com.kefawatch: INFO
