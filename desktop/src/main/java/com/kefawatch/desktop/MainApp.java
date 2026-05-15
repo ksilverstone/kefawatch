@@ -26,14 +26,12 @@ public class MainApp extends Application {
     }
 
     private void showMainCatalog() {
-        StackPane root = new StackPane();
-        root.setStyle("-fx-background-color: #141414;");
-        Label label = new Label("Giriş Başarılı! Katalog yapım aşamasında...");
-        label.setStyle("-fx-text-fill: white; -fx-font-size: 20px;");
-        root.getChildren().add(label);
+        com.kefawatch.desktop.ui.MainView mainView = new com.kefawatch.desktop.ui.MainView(() -> {
+            // Placeholder for Step 3 Detay Sayfası
+        });
 
         primaryStage.setTitle("Kefawatch Masaüstü - Katalog");
-        primaryStage.getScene().setRoot(root);
+        primaryStage.getScene().setRoot(mainView);
     }
 
     public static void main(String[] args) {

@@ -59,4 +59,22 @@ public class ApiClient {
         }
         return false;
     }
+
+    public static JsonNode getTitles() {
+        try {
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(BASE_URL + "/titles?page=0&size=50"))
+                    .header("Authorization", "Bearer " + jwtToken)
+                    .GET()
+                    .build();
+
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+            if (response.statusCode() == 200) {
+                return mapper.readTree(response.body()).path("data").path("content");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
 }
