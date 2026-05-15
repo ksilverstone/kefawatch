@@ -1,0 +1,16 @@
+.DS_Store
+.idea
+*.iml
+*.log
+
+backend/target/
+backend/.classpath
+backend/.project
+backend/.settings/
+
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+android/*.iml
+android/.idea/
