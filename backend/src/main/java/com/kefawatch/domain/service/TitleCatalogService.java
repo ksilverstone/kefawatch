@@ -30,6 +30,15 @@ public class TitleCatalogService {
         return titleRepository.findPage(page, size);
     }
 
+    public PageResult<TitleSummary> searchTitles(String query, int page, int size) {
+        return titleRepository.search(query, page, size);
+    }
+
+    public TitleDetail createTitle(String type, String name, String description, String posterUrl, String trailerUrl, String externalRef) {
+        long id = titleRepository.insert(type, name, description, posterUrl, trailerUrl, externalRef);
+        return getTitle(id);
+    }
+
     public TitleDetail getTitle(long id) {
         return metadataSource.findTitle(id)
                 .orElseThrow(() -> DomainExceptions.notFound("Title not found"));

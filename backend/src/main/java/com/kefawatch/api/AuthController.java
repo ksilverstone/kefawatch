@@ -26,7 +26,7 @@ public class AuthController {
     @PostMapping("/register")
     @ResponseStatus(HttpStatus.CREATED)
     public ApiResponse<TokenResponse> register(@Valid @RequestBody RegisterRequest request) {
-        String token = authService.register(request.username(), request.password());
+        String token = authService.register(request.username(), request.email(), request.firstName(), request.lastName(), request.password());
         return ApiResponse.ok(new TokenResponse(token));
     }
 

@@ -25,9 +25,21 @@ public class TitleController {
     @GetMapping
     public ApiResponse<PageResult<TitleSummary>> list(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(required = false) String search
     ) {
+        if (search != null && !search.isBlank()) {
+            return ApiResponse.ok(titleCatalogService.searchTitles(search, page, size));
+        }
         return ApiResponse.ok(titleCatalogService.listTitles(page, size));
+    }
+
+    @PostMapping
+    public ApiResponse<TitleDetail> createTitle(@jakarta.validation.Valid @org.springframework.web.bind.annotation.RequestBody com.kefawatch.api.dto.CreateTitleRequest request) {
+        TitleDetail newTitle = titleCatalogService.createTitle(
+                request.type(), request.name(), request.description(), request.posterUrl(), request.trailerUrl(), request.externalRef()
+        );
+        return ApiResponse.ok(newTitle);
     }
 
     @GetMapping("/{id}")

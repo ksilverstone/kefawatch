@@ -22,12 +22,15 @@ public class AuthService {
         this.jwtService = jwtService;
     }
 
-    public String register(String username, String rawPassword) {
+    public String register(String username, String email, String firstName, String lastName, String rawPassword) {
         if (userRepository.findByUsername(username).isPresent()) {
-            throw DomainExceptions.conflict("Username already taken");
+            throw DomainExceptions.conflict("Bu kullanıcı adı zaten alınmış.");
+        }
+        if (userRepository.findByEmail(email).isPresent()) {
+            throw DomainExceptions.conflict("Bu email adresi zaten kullanımda.");
         }
         String hash = passwordEncoder.encode(rawPassword);
-        long id = userRepository.insert(username, hash);
+        long id = userRepository.insert(username, email, firstName, lastName, hash);
         return jwtService.generateToken(id, username);
     }
 

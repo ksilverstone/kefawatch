@@ -19,4 +19,8 @@ public interface TitleRepository {
     boolean existsById(long id);
 
     List<TitleSummary> findSummariesByIds(List<Long> ids);
+
+    PageResult<TitleSummary> search(String query, int page, int size);
+
+    long insert(String type, String name, String description, String posterUrl, String trailerUrl, String externalRef);
 }

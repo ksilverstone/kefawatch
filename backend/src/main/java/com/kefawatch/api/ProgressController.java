@@ -30,6 +30,12 @@ public class ProgressController {
         return ApiResponse.ok(watchProgressService.get(user.userId(), titleId));
     }
 
+    @GetMapping
+    public ApiResponse<java.util.List<WatchProgress>> list() {
+        AuthPrincipal user = CurrentUser.requireAuthPrincipal();
+        return ApiResponse.ok(watchProgressService.list(user.userId()));
+    }
+
     @PutMapping
     public ApiResponse<WatchProgress> upsert(@Valid @RequestBody ProgressUpsertRequest request) {
         AuthPrincipal user = CurrentUser.requireAuthPrincipal();

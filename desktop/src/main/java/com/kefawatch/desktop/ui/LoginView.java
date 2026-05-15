@@ -1,68 +1,68 @@
 package com.kefawatch.desktop.ui;
-
 import com.kefawatch.desktop.api.ApiClient;
-import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.PasswordField;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
+import javafx.scene.layout.StackPane;
 
-public class LoginView extends VBox {
+public class LoginView extends StackPane {
+    public LoginView(Runnable onSuccess, Runnable onBack) {
+        setStyle("-fx-background-color: radial-gradient(center 50% 50%, radius 100%, #333333, #000000);");
+        
+        javafx.scene.image.ImageView bg = new javafx.scene.image.ImageView();
+        try {
+            javafx.scene.image.Image img = new javafx.scene.image.Image("https://image.tmdb.org/t/p/original/rAiYTfKGqDCRIIqo664sY9XZIvQ.jpg", true);
+            bg.setImage(img);
+        } catch (Exception e) {}
+        
+        bg.setPreserveRatio(false);
+        bg.fitWidthProperty().bind(this.widthProperty());
+        bg.fitHeightProperty().bind(this.heightProperty());
 
-    private final Runnable onLoginSuccess;
+        VBox overlay = new VBox();
+        overlay.setStyle("-fx-background-color: rgba(0,0,0,0.6);");
 
-    public LoginView(Runnable onLoginSuccess) {
-        this.onLoginSuccess = onLoginSuccess;
+        VBox form = new VBox();
+        form.setStyle("-fx-background-color: rgba(0,0,0,0.8); -fx-padding: 60; -fx-background-radius: 8; -fx-border-color: #333; -fx-border-width: 1; -fx-border-radius: 8;");
+        form.setAlignment(Pos.CENTER);
+        form.setSpacing(25);
+        form.setMaxWidth(450);
+        form.setMaxHeight(550);
 
-        setAlignment(Pos.CENTER);
-        setSpacing(15);
-        setPadding(new Insets(40));
-        setStyle("-fx-background-color: #141414;");
-
-        Label title = new Label("Kefawatch");
-        title.setStyle("-fx-text-fill: #E50914; -fx-font-size: 32px; -fx-font-weight: bold;");
+        Label title = new Label("Oturum Aç");
+        title.setStyle("-fx-font-size: 32px; -fx-font-weight: bold; -fx-text-fill: white; -fx-alignment: center-left; -fx-pref-width: 300px;");
 
         TextField userField = new TextField();
         userField.setPromptText("Kullanıcı Adı");
         userField.setMaxWidth(300);
-        userField.setStyle("-fx-background-color: #333333; -fx-text-fill: white; -fx-prompt-text-fill: gray; -fx-padding: 10px;");
+        userField.setStyle("-fx-background-color: #333; -fx-text-fill: white; -fx-padding: 15; -fx-background-radius: 4; -fx-font-size: 16px; -fx-prompt-text-fill: #aaa;");
 
         PasswordField passField = new PasswordField();
         passField.setPromptText("Şifre");
         passField.setMaxWidth(300);
-        passField.setStyle("-fx-background-color: #333333; -fx-text-fill: white; -fx-prompt-text-fill: gray; -fx-padding: 10px;");
+        passField.setStyle("-fx-background-color: #333; -fx-text-fill: white; -fx-padding: 15; -fx-background-radius: 4; -fx-font-size: 16px; -fx-prompt-text-fill: #aaa;");
 
         Label errorLabel = new Label();
-        errorLabel.setStyle("-fx-text-fill: red;");
+        errorLabel.setStyle("-fx-text-fill: #E50914; -fx-font-weight: bold; -fx-font-size: 14px;");
 
-        Button loginBtn = new Button("Giriş Yap");
+        Button loginBtn = new Button("Oturum Aç");
+        loginBtn.setStyle("-fx-background-color: #E50914; -fx-text-fill: white; -fx-font-size: 18px; -fx-font-weight: bold; -fx-padding: 15 20; -fx-background-radius: 4; -fx-cursor: hand;");
         loginBtn.setMaxWidth(300);
-        loginBtn.setStyle("-fx-background-color: #E50914; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 10px; -fx-cursor: hand;");
-        
-        Button registerBtn = new Button("Kayıt Ol");
-        registerBtn.setMaxWidth(300);
-        registerBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: #E50914; -fx-border-color: #E50914; -fx-border-width: 2px; -fx-border-radius: 4px; -fx-font-weight: bold; -fx-padding: 8px; -fx-cursor: hand;");
-
         loginBtn.setOnAction(e -> {
-            boolean success = ApiClient.login(userField.getText(), passField.getText());
-            if (success) {
-                onLoginSuccess.run();
+            String err = ApiClient.login(userField.getText(), passField.getText());
+            if (err == null) {
+                onSuccess.run();
             } else {
-                errorLabel.setText("Giriş başarısız! Bilgileri kontrol edin.");
+                errorLabel.setText(err);
             }
         });
 
-        registerBtn.setOnAction(e -> {
-            boolean success = ApiClient.register(userField.getText(), passField.getText());
-            if (success) {
-                onLoginSuccess.run();
-            } else {
-                errorLabel.setText("Kayıt başarısız! Kullanıcı adı alınmış olabilir.");
-            }
-        });
+        Button backBtn = new Button("İlk Sayfaya Dön");
+        backBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: #737373; -fx-font-size: 16px; -fx-cursor: hand;");
+        backBtn.setOnAction(e -> onBack.run());
 
-        getChildren().addAll(title, userField, passField, errorLabel, loginBtn, registerBtn);
+        form.getChildren().addAll(title, userField, passField, loginBtn, errorLabel, backBtn);
+        
+        getChildren().addAll(bg, overlay, form);
     }
 }

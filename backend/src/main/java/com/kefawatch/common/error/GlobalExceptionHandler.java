@@ -19,9 +19,9 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse<Void>> handleValidation(MethodArgumentNotValidException ex,
                                                                HttpServletRequest request) {
         String msg = ex.getBindingResult().getFieldErrors().stream()
-                .map(fe -> fe.getField() + ": " + fe.getDefaultMessage())
+                .map(fe -> fe.getDefaultMessage())
                 .findFirst()
-                .orElse("Validation failed");
+                .orElse("Doğrulama hatası");
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(ApiResponse.fail("VALIDATION_ERROR", msg));
     }

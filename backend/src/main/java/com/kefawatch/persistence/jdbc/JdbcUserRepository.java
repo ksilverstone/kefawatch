@@ -18,6 +18,9 @@ public class JdbcUserRepository implements UserRepository {
     private static final RowMapper<UserAccount> MAPPER = (rs, rowNum) -> new UserAccount(
             rs.getLong("id"),
             rs.getString("username"),
+            rs.getString("email"),
+            rs.getString("first_name"),
+            rs.getString("last_name"),
             rs.getString("password_hash")
     );
 
@@ -29,26 +32,35 @@ public class JdbcUserRepository implements UserRepository {
 
     @Override
     public Optional<UserAccount> findByUsername(String username) {
-        var list = jdbcTemplate.query("SELECT id, username, password_hash FROM users WHERE username = ?", MAPPER, username);
+        var list = jdbcTemplate.query("SELECT id, username, email, first_name, last_name, password_hash FROM users WHERE username = ?", MAPPER, username);
+        return list.stream().findFirst();
+    }
+
+    @Override
+    public Optional<UserAccount> findByEmail(String email) {
+        var list = jdbcTemplate.query("SELECT id, username, email, first_name, last_name, password_hash FROM users WHERE email = ?", MAPPER, email);
         return list.stream().findFirst();
     }
 
     @Override
     public Optional<UserAccount> findById(long id) {
-        var list = jdbcTemplate.query("SELECT id, username, password_hash FROM users WHERE id = ?", MAPPER, id);
+        var list = jdbcTemplate.query("SELECT id, username, email, first_name, last_name, password_hash FROM users WHERE id = ?", MAPPER, id);
         return list.stream().findFirst();
     }
 
     @Override
-    public long insert(String username, String passwordHash) {
+    public long insert(String username, String email, String firstName, String lastName, String passwordHash) {
         KeyHolder keyHolder = new GeneratedKeyHolder();
         jdbcTemplate.update(connection -> {
             PreparedStatement ps = connection.prepareStatement(
-                    "INSERT INTO users (username, password_hash) VALUES (?, ?)",
+                    "INSERT INTO users (username, email, first_name, last_name, password_hash) VALUES (?, ?, ?, ?, ?)",
                     new String[]{"id"}
             );
             ps.setString(1, username);
-            ps.setString(2, passwordHash);
+            ps.setString(2, email);
+            ps.setString(3, firstName);
+            ps.setString(4, lastName);
+            ps.setString(5, passwordHash);
             return ps;
         }, keyHolder);
         return Objects.requireNonNull(keyHolder.getKey()).longValue();

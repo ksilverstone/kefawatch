@@ -38,4 +38,8 @@ public class WatchProgressService {
         }
         return progressRepository.upsert(userId, titleId, episodeId, positionSeconds, completed);
     }
+
+    public List<WatchProgress> list(long userId) {
+        return progressRepository.findByUserId(userId);
+    }
 }

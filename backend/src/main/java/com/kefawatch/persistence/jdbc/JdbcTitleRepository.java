@@ -129,4 +129,37 @@ public class JdbcTitleRepository implements TitleRepository {
         }
         return ordered;
     }
+
+    @Override
+    public PageResult<TitleSummary> search(String query, int page, int size) {
+        String likeQuery = "%" + query.toLowerCase() + "%";
+        Long totalObj = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM titles WHERE LOWER(name) LIKE ?", Long.class, likeQuery);
+        long total = totalObj == null ? 0L : totalObj;
+        int offset = page * size;
+        List<TitleSummary> rows = jdbcTemplate.query(
+                "SELECT id, type, name, poster_url FROM titles WHERE LOWER(name) LIKE ? ORDER BY id LIMIT ? OFFSET ?",
+                SUMMARY_MAPPER,
+                likeQuery, size, offset
+        );
+        return new PageResult<>(rows, page, size, total);
+    }
+
+    @Override
+    public long insert(String type, String name, String description, String posterUrl, String trailerUrl, String externalRef) {
+        org.springframework.jdbc.support.KeyHolder keyHolder = new org.springframework.jdbc.support.GeneratedKeyHolder();
+        jdbcTemplate.update(connection -> {
+            java.sql.PreparedStatement ps = connection.prepareStatement(
+                    "INSERT INTO titles (type, name, description, poster_url, trailer_url, external_ref) VALUES (?, ?, ?, ?, ?, ?)",
+                    new String[]{"id"}
+            );
+            ps.setString(1, type);
+            ps.setString(2, name);
+            ps.setString(3, description);
+            ps.setString(4, posterUrl);
+            ps.setString(5, trailerUrl);
+            ps.setString(6, externalRef);
+            return ps;
+        }, keyHolder);
+        return java.util.Objects.requireNonNull(keyHolder.getKey()).longValue();
+    }
 }

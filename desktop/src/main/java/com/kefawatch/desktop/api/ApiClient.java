@@ -2,6 +2,7 @@ package com.kefawatch.desktop.api;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -17,8 +18,7 @@ public class ApiClient {
     public static String getJwtToken() {
         return jwtToken;
     }
-
-    public static boolean login(String username, String password) {
+    public static String login(String username, String password) {
         try {
             String body = String.format("{\"username\":\"%s\",\"password\":\"%s\"}", username, password);
             HttpRequest request = HttpRequest.newBuilder()
@@ -28,20 +28,29 @@ public class ApiClient {
                     .build();
 
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+            JsonNode root = mapper.readTree(response.body());
             if (response.statusCode() == 200) {
-                JsonNode root = mapper.readTree(response.body());
                 jwtToken = root.path("data").path("accessToken").asText();
-                return true;
+                return null;
+            } else {
+                return root.path("error").path("message").asText("Giriş başarısız.");
             }
         } catch (Exception e) {
             e.printStackTrace();
+            return "Sunucuya bağlanılamadı.";
         }
-        return false;
     }
 
-    public static boolean register(String username, String password) {
+    public static String register(String username, String email, String firstName, String lastName, String password) {
         try {
-            String body = String.format("{\"username\":\"%s\",\"password\":\"%s\"}", username, password);
+            ObjectNode node = mapper.createObjectNode();
+            node.put("username", username);
+            node.put("email", email);
+            node.put("firstName", firstName);
+            node.put("lastName", lastName);
+            node.put("password", password);
+            String body = mapper.writeValueAsString(node);
+
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create(BASE_URL + "/auth/register"))
                     .header("Content-Type", "application/json")
@@ -49,15 +58,17 @@ public class ApiClient {
                     .build();
 
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+            JsonNode root = mapper.readTree(response.body());
             if (response.statusCode() == 201) {
-                JsonNode root = mapper.readTree(response.body());
                 jwtToken = root.path("data").path("accessToken").asText();
-                return true;
+                return null;
+            } else {
+                return root.path("error").path("message").asText("Kayıt başarısız.");
             }
         } catch (Exception e) {
             e.printStackTrace();
+            return "Sunucuya bağlanılamadı.";
         }
-        return false;
     }
 
     public static JsonNode getTitles() {
@@ -130,5 +141,101 @@ public class ApiClient {
             e.printStackTrace();
         }
         return false;
+    }
+
+    public static java.util.List<Long> getWatchlist() {
+        try {
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(BASE_URL + "/watchlist"))
+                    .header("Authorization", "Bearer " + jwtToken)
+                    .GET()
+                    .build();
+
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+            if (response.statusCode() == 200) {
+                JsonNode arr = mapper.readTree(response.body()).path("data");
+                java.util.List<Long> ids = new java.util.ArrayList<>();
+                if (arr.isArray()) {
+                    for (JsonNode n : arr) {
+                        ids.add(n.path("titleId").asLong());
+                    }
+                }
+                return ids;
+            }
+        } catch (Exception e) {}
+        return new java.util.ArrayList<>();
+    }
+
+    public static java.util.List<Long> getWatched() {
+        try {
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(BASE_URL + "/progress"))
+                    .header("Authorization", "Bearer " + jwtToken)
+                    .GET()
+                    .build();
+
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+            if (response.statusCode() == 200) {
+                JsonNode arr = mapper.readTree(response.body()).path("data");
+                java.util.List<Long> ids = new java.util.ArrayList<>();
+                if (arr.isArray()) {
+                    for (JsonNode n : arr) {
+                        if (n.path("completed").asBoolean(false)) {
+                            ids.add(n.path("titleId").asLong());
+                        }
+                    }
+                }
+                return ids;
+            }
+        } catch (Exception e) {}
+        return new java.util.ArrayList<>();
+    }
+    public static JsonNode searchTitles(String query) {
+        try {
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(BASE_URL + "/titles?page=0&size=50&search=" + java.net.URLEncoder.encode(query, "UTF-8")))
+                    .header("Authorization", "Bearer " + jwtToken)
+                    .GET()
+                    .build();
+
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+            if (response.statusCode() == 200) {
+                return mapper.readTree(response.body()).path("data").path("content");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public static String createTitle(String type, String name, String description, String posterUrl, String trailerUrl, String externalRef) {
+        try {
+            ObjectNode node = mapper.createObjectNode();
+            node.put("type", type);
+            node.put("name", name);
+            node.put("description", description);
+            node.put("posterUrl", posterUrl);
+            node.put("trailerUrl", trailerUrl);
+            node.put("externalRef", externalRef);
+            String body = mapper.writeValueAsString(node);
+
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(BASE_URL + "/titles"))
+                    .header("Authorization", "Bearer " + jwtToken)
+                    .header("Content-Type", "application/json")
+                    .POST(HttpRequest.BodyPublishers.ofString(body))
+                    .build();
+
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+            JsonNode root = mapper.readTree(response.body());
+            if (response.statusCode() == 200) {
+                return null;
+            } else {
+                return root.path("error").path("message").asText("Ekleme başarısız.");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "Sunucu hatası.";
+        }
     }
 }

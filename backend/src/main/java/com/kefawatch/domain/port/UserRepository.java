@@ -8,7 +8,9 @@ public interface UserRepository {
 
     Optional<UserAccount> findByUsername(String username);
 
+    Optional<UserAccount> findByEmail(String email);
+
     Optional<UserAccount> findById(long id);
 
-    long insert(String username, String passwordHash);
+    long insert(String username, String email, String firstName, String lastName, String passwordHash);
 }

@@ -71,4 +71,13 @@ public class JdbcWatchProgressRepository implements WatchProgressRepository {
         );
         return list.stream().findFirst();
     }
+
+    @Override
+    public List<WatchProgress> findByUserId(long userId) {
+        return jdbcTemplate.query(
+                "SELECT id, user_id, title_id, episode_id, position_seconds, completed, updated_at FROM watch_progress WHERE user_id = ?",
+                MAPPER,
+                userId
+        );
+    }
 }
