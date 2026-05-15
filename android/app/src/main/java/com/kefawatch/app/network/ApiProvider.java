@@ -47,5 +47,11 @@ public final class ApiProvider {
 
         @GET("api/v1/titles")
         Call<TitlesListDto> listTitles(@Query("page") int page, @Query("size") int size);
+
+        @GET("api/v1/titles/{id}")
+        Call<com.kefawatch.app.network.dto.TitleDetailDto> getTitle(@retrofit2.http.Path("id") long id);
+
+        @POST("api/v1/watchlist")
+        Call<com.kefawatch.app.network.dto.ApiResponse> addToWatchlist(@retrofit2.http.Header("Authorization") String token, @Body com.kefawatch.app.network.dto.WatchlistAddRequest body);
     }
 }

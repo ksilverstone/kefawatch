@@ -15,7 +15,16 @@ import java.util.List;
 
 public class TitlesAdapter extends RecyclerView.Adapter<TitlesAdapter.Holder> {
 
+    public interface OnTitleClickListener {
+        void onTitleClick(long id, String name);
+    }
+
     private final List<TitlesListDto.TitleItem> items = new ArrayList<>();
+    private final OnTitleClickListener listener;
+
+    public TitlesAdapter(OnTitleClickListener listener) {
+        this.listener = listener;
+    }
 
     public void submit(List<TitlesListDto.TitleItem> next) {
         items.clear();
@@ -35,6 +44,9 @@ public class TitlesAdapter extends RecyclerView.Adapter<TitlesAdapter.Holder> {
         TitlesListDto.TitleItem item = items.get(position);
         holder.name.setText(item.name);
         holder.meta.setText(item.type + " · id=" + item.id);
+        holder.itemView.setOnClickListener(v -> {
+            if (listener != null) listener.onTitleClick(item.id, item.name);
+        });
     }
 
     @Override

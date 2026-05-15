@@ -38,7 +38,12 @@ public class CatalogFragment extends Fragment {
         RecyclerView recyclerTitles = view.findViewById(R.id.recyclerTitles);
         swipeRefresh = view.findViewById(R.id.swipeRefresh);
 
-        titlesAdapter = new TitlesAdapter();
+        titlesAdapter = new TitlesAdapter((id, name) -> {
+            android.content.Intent intent = new android.content.Intent(requireContext(), TitleDetailActivity.class);
+            intent.putExtra("TITLE_ID", id);
+            intent.putExtra("TITLE_NAME", name);
+            startActivity(intent);
+        });
         recyclerTitles.setLayoutManager(new LinearLayoutManager(requireContext()));
         recyclerTitles.setAdapter(titlesAdapter);
         
