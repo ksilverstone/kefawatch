@@ -30,6 +30,7 @@ public class TitleDetailActivity extends AppCompatActivity {
     private TextView textTitleDesc;
     private TextView textEpisodes;
     private MaterialButton buttonWatchlist;
+    private MaterialButton buttonMarkWatched;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,8 +49,10 @@ public class TitleDetailActivity extends AppCompatActivity {
         textTitleDesc = findViewById(R.id.textTitleDesc);
         textEpisodes = findViewById(R.id.textEpisodes);
         buttonWatchlist = findViewById(R.id.buttonWatchlist);
+        buttonMarkWatched = findViewById(R.id.buttonMarkWatched);
 
         buttonWatchlist.setOnClickListener(v -> addToWatchlist());
+        buttonMarkWatched.setOnClickListener(v -> markAsWatched());
 
         if (titleId != -1) {
             loadDetails();
@@ -104,6 +107,38 @@ public class TitleDetailActivity extends AppCompatActivity {
                 runOnUiThread(() -> {
                     Toast.makeText(this, "Ağ hatası", Toast.LENGTH_SHORT).show();
                     buttonWatchlist.setEnabled(true);
+                });
+            }
+        });
+    }
+
+    private void markAsWatched() {
+        buttonMarkWatched.setEnabled(false);
+        SharedPreferences prefs = getSharedPreferences("kefawatch_prefs", Context.MODE_PRIVATE);
+        String token = prefs.getString("jwt", null);
+        if (token == null) {
+            Toast.makeText(this, "Oturum bulunamadı", Toast.LENGTH_SHORT).show();
+            buttonMarkWatched.setEnabled(true);
+            return;
+        }
+
+        io.execute(() -> {
+            try {
+                Response<ApiResponse> response = ApiProvider.create()
+                        .updateProgress("Bearer " + token, new com.kefawatch.app.network.dto.ProgressUpsertRequest(titleId, null, 0, true)).execute();
+                
+                runOnUiThread(() -> {
+                    if (response.isSuccessful()) {
+                        Toast.makeText(this, "Bölüm izlendi olarak kaydedildi!", Toast.LENGTH_SHORT).show();
+                    } else {
+                        Toast.makeText(this, "Hata: " + response.code(), Toast.LENGTH_SHORT).show();
+                    }
+                    buttonMarkWatched.setEnabled(true);
+                });
+            } catch (IOException e) {
+                runOnUiThread(() -> {
+                    Toast.makeText(this, "Ağ hatası", Toast.LENGTH_SHORT).show();
+                    buttonMarkWatched.setEnabled(true);
                 });
             }
         });

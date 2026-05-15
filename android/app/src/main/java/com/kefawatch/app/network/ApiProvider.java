@@ -53,5 +53,8 @@ public final class ApiProvider {
 
         @POST("api/v1/watchlist")
         Call<com.kefawatch.app.network.dto.ApiResponse> addToWatchlist(@retrofit2.http.Header("Authorization") String token, @Body com.kefawatch.app.network.dto.WatchlistAddRequest body);
+
+        @retrofit2.http.PUT("api/v1/progress")
+        Call<com.kefawatch.app.network.dto.ApiResponse> updateProgress(@retrofit2.http.Header("Authorization") String token, @Body com.kefawatch.app.network.dto.ProgressUpsertRequest body);
     }
 }

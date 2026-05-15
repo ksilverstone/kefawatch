@@ -33,4 +33,12 @@
         android:layout_marginTop="24dp"
         android:text="İzleme Listesine Ekle" />
 
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/buttonMarkWatched"
+        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="İzlendi Olarak İşaretle" />
+
 </LinearLayout>
