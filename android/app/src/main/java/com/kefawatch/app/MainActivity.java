@@ -1,22 +1,19 @@
 package com.kefawatch.app;
 
 import android.content.Context;
-import android.content.SharedPreferences;
+import android.content.Intent;
 import android.os.Bundle;
-import android.widget.TextView;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.widget.Toast;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
-import com.google.android.material.button.MaterialButton;
-import com.google.android.material.textfield.TextInputEditText;
 import com.kefawatch.app.network.ApiProvider;
-import com.kefawatch.app.network.dto.LoginBody;
 import com.kefawatch.app.network.dto.TitlesListDto;
-import com.kefawatch.app.network.dto.TokenEnvelope;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -33,109 +30,77 @@ public class MainActivity extends AppCompatActivity {
 
     private final ExecutorService io = Executors.newSingleThreadExecutor();
 
-    private TextInputEditText inputUsername;
-    private TextInputEditText inputPassword;
-    private TextView textStatus;
     private TitlesAdapter titlesAdapter;
+    private SwipeRefreshLayout swipeRefresh;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        
+        setTitle("Katalog");
 
-        inputUsername = findViewById(R.id.inputUsername);
-        inputPassword = findViewById(R.id.inputPassword);
-        textStatus = findViewById(R.id.textStatus);
-        MaterialButton buttonLogin = findViewById(R.id.buttonLogin);
-        MaterialButton buttonRegister = findViewById(R.id.buttonRegister);
-        MaterialButton buttonLoadTitles = findViewById(R.id.buttonLoadTitles);
         RecyclerView recyclerTitles = findViewById(R.id.recyclerTitles);
+        swipeRefresh = findViewById(R.id.swipeRefresh);
 
         titlesAdapter = new TitlesAdapter();
         recyclerTitles.setLayoutManager(new LinearLayoutManager(this));
         recyclerTitles.setAdapter(titlesAdapter);
+        
+        swipeRefresh.setOnRefreshListener(this::loadTitles);
 
-        buttonLogin.setOnClickListener(v -> doAuth(false));
-        buttonRegister.setOnClickListener(v -> doAuth(true));
-        buttonLoadTitles.setOnClickListener(v -> loadTitles());
-
-        updateStatus("Hazır. API: " + BuildConfig.API_BASE_URL);
+        loadTitles();
+    }
+    
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        menu.add(0, 1, 0, "Çıkış Yap").setShowAsAction(MenuItem.SHOW_AS_ACTION_NEVER);
+        return true;
     }
 
-    private SharedPreferences prefs() {
-        return getSharedPreferences(PREFS, Context.MODE_PRIVATE);
-    }
-
-    private void updateStatus(String message) {
-        runOnUiThread(() -> textStatus.setText(message));
-    }
-
-    private void toast(String message) {
-        runOnUiThread(() -> Toast.makeText(this, message, Toast.LENGTH_LONG).show());
-    }
-
-    private void doAuth(boolean register) {
-        String username = textOf(inputUsername);
-        String password = textOf(inputPassword);
-        if (username.isEmpty() || password.length() < 6) {
-            toast("Kullanıcı adı ve en az 6 karakter şifre gerekli.");
-            return;
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == 1) {
+            getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().remove(KEY_TOKEN).apply();
+            startActivity(new Intent(this, LoginActivity.class));
+            finish();
+            return true;
         }
-        io.execute(() -> {
-            try {
-                var api = ApiProvider.create();
-                Response<TokenEnvelope> response = register
-                        ? api.register(new LoginBody(username, password)).execute()
-                        : api.login(new LoginBody(username, password)).execute();
-                if (!response.isSuccessful() || response.body() == null) {
-                    updateStatus("HTTP " + response.code());
-                    toast("İstek başarısız: " + response.code());
-                    return;
-                }
-                TokenEnvelope body = response.body();
-                if (!body.success || body.data == null || body.data.accessToken == null) {
-                    String msg = body.message != null ? body.message : "Bilinmeyen hata";
-                    updateStatus(msg);
-                    toast(msg);
-                    return;
-                }
-                prefs().edit().putString(KEY_TOKEN, body.data.accessToken).apply();
-                updateStatus(register ? "Kayıt tamam, token saklandı." : "Giriş tamam, token saklandı.");
-            } catch (IOException e) {
-                updateStatus("Ağ hatası: " + e.getMessage());
-                toast("Ağ hatası");
-            }
-        });
+        return super.onOptionsItemSelected(item);
     }
 
     private void loadTitles() {
+        swipeRefresh.setRefreshing(true);
         io.execute(() -> {
             try {
                 Response<TitlesListDto> response = ApiProvider.create().listTitles(0, 50).execute();
                 if (!response.isSuccessful() || response.body() == null) {
-                    updateStatus("Katalog HTTP " + response.code());
+                    runOnUiThread(() -> {
+                        Toast.makeText(this, "Katalog HTTP " + response.code(), Toast.LENGTH_LONG).show();
+                        swipeRefresh.setRefreshing(false);
+                    });
                     return;
                 }
                 TitlesListDto body = response.body();
                 if (!body.success || body.data == null) {
-                    updateStatus(body.message != null ? body.message : "Katalog yanıtı geçersiz");
+                    runOnUiThread(() -> {
+                        Toast.makeText(this, body.message != null ? body.message : "Katalog yanıtı geçersiz", Toast.LENGTH_LONG).show();
+                        swipeRefresh.setRefreshing(false);
+                    });
                     return;
                 }
                 List<TitlesListDto.TitleItem> items = body.data.content != null ? body.data.content : Collections.emptyList();
-                runOnUiThread(() -> titlesAdapter.submit(items));
-                updateStatus("Toplam öğe: " + body.data.totalElements);
+                runOnUiThread(() -> {
+                    titlesAdapter.submit(items);
+                    swipeRefresh.setRefreshing(false);
+                });
             } catch (IOException e) {
-                updateStatus("Ağ hatası: " + e.getMessage());
+                runOnUiThread(() -> {
+                    Toast.makeText(this, "Ağ hatası", Toast.LENGTH_LONG).show();
+                    swipeRefresh.setRefreshing(false);
+                });
             }
         });
-    }
-
-    @NonNull
-    private static String textOf(TextInputEditText editText) {
-        if (editText.getText() == null) {
-            return "";
-        }
-        return editText.getText().toString().trim();
     }
 
     @Override
