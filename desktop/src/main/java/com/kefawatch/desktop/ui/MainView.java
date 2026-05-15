@@ -11,9 +11,9 @@ import javafx.scene.layout.VBox;
 
 public class MainView extends VBox {
 
-    private final Runnable onTitleSelected; // for step 3
+    private final java.util.function.Consumer<Long> onTitleSelected;
 
-    public MainView(Runnable onTitleSelected) {
+    public MainView(java.util.function.Consumer<Long> onTitleSelected) {
         this.onTitleSelected = onTitleSelected;
 
         setSpacing(20);
@@ -73,8 +73,7 @@ public class MainView extends VBox {
         // Click effect -> trigger step 3 detail view
         card.setOnMouseClicked(e -> {
             long id = item.path("id").asLong();
-            System.out.println("Tıklandı ID: " + id);
-            // onTitleSelected.run(); -> will pass ID in Step 3
+            onTitleSelected.accept(id);
         });
 
         return card;

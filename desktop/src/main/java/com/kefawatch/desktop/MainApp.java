@@ -26,12 +26,18 @@ public class MainApp extends Application {
     }
 
     private void showMainCatalog() {
-        com.kefawatch.desktop.ui.MainView mainView = new com.kefawatch.desktop.ui.MainView(() -> {
-            // Placeholder for Step 3 Detay Sayfası
+        com.kefawatch.desktop.ui.MainView mainView = new com.kefawatch.desktop.ui.MainView(id -> {
+            showTitleDetail(id);
         });
 
         primaryStage.setTitle("Kefawatch Masaüstü - Katalog");
         primaryStage.getScene().setRoot(mainView);
+    }
+
+    private void showTitleDetail(long id) {
+        com.kefawatch.desktop.ui.TitleDetailView detailView = new com.kefawatch.desktop.ui.TitleDetailView(id, this::showMainCatalog);
+        primaryStage.setTitle("Kefawatch Masaüstü - Detay");
+        primaryStage.getScene().setRoot(detailView);
     }
 
     public static void main(String[] args) {
